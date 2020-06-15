@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Expense Manager</string>
+    <string name="log_in">Log In</string>
+    <string name="hint">Email:</string>
+    <string name="password">Password:</string>
+    <string name="forget_password">Forget_Password?</string>
+    <string name="sign_up">Don\'t have an account? Sign up here.</string>
+    <string name="registration">Registration</string>
+    <string name="log_in_account">Already have an account? Sign in here.</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+</resources>
