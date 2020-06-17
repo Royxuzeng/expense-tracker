@@ -1,7 +1,9 @@
 package com.hfad.expensemanager;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
@@ -12,6 +14,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+
 public class MainActivity extends AppCompatActivity {
 
     private EditText mEmail;
@@ -19,18 +26,24 @@ public class MainActivity extends AppCompatActivity {
     private Button btnLogin;
     private TextView mForgetPassword;
     private TextView mSignupHere;
-    DatabaseHelper db;
+
+    private ProgressDialog mDialog;
+
+    // Firebase
+
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mAuth = FirebaseAuth.getInstance();
 
+        mDialog = new ProgressDialog(this);
 
         loginDetails();
 
-        db = new DatabaseHelper(this);
     }
 
     private void loginDetails() {
@@ -45,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String email = mEmail.getText().toString();
                 String pass = mPass.getText().toString();
-                Boolean res = db.checkUser(email, pass);
 
                 if (TextUtils.isEmpty(email)) {
                     mEmail.setError("Email required..");
@@ -57,18 +69,26 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                if (res == true) {
-                    Toast toast = Toast.makeText(MainActivity.this,
-                            "Successfully logged in", Toast.LENGTH_SHORT);
-                    toast.show();
-                    Intent intent = new Intent(MainActivity.this,
-                            HomeActivity.class);
-                    startActivity(intent);
-                } else {
-                    Toast toast = Toast.makeText(MainActivity.this,
-                            "Login error", Toast.LENGTH_SHORT);
-                    toast.show();
-                }
+                mDialog.setMessage("Processing..");
+                mDialog.show();
+
+                mAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener(
+                        new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            mDialog.dismiss();
+                            startActivity(new Intent(getApplicationContext(),
+                                    HomeActivity.class));
+                            Toast.makeText(getApplicationContext(),
+                                    "Login Successful", Toast.LENGTH_SHORT).show();
+                        } else {
+                            mDialog.dismiss();
+                            Toast.makeText(getApplicationContext(),
+                                    "Login Failed", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
             }
         });
 
