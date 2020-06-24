@@ -64,7 +64,9 @@ public class Data {
         this.date = date;
     }
 
+    public Data(){
 
+    }
 
 }
 
