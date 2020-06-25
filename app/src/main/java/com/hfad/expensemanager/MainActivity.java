@@ -64,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                if (TextUtils.isEmpty(email)) {
-                    mEmail.setError("Password required..");
+                if (TextUtils.isEmpty(pass)) {
+                    mPass.setError("Password required..");
                     return;
                 }
 
