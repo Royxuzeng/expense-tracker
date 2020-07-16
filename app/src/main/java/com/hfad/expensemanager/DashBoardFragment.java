@@ -314,7 +314,7 @@ public class DashBoardFragment extends Fragment {
                 String mDate = DateFormat.getDateInstance().format(new Date());
 
                 Data data = new Data(ouramountint, type, note, id, mDate);
-
+                
                 mIncomeDatabase.child(id).setValue(data);
 
                 Toast.makeText(getActivity(), "Data ADDED", Toast.LENGTH_SHORT).show();
