@@ -83,21 +83,21 @@ public class MainActivity extends AppCompatActivity {
 
                 mAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener(
                         new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            mDialog.dismiss();
-                            startActivity(new Intent(getApplicationContext(),
-                                    HomeActivity.class));
-                            Toast.makeText(getApplicationContext(),
-                                    "Login Successful", Toast.LENGTH_SHORT).show();
-                        } else {
-                            mDialog.dismiss();
-                            Toast.makeText(getApplicationContext(),
-                                    "Login Failed", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    mDialog.dismiss();
+                                    startActivity(new Intent(getApplicationContext(),
+                                            HomeActivity.class));
+                                    Toast.makeText(getApplicationContext(),
+                                            "Login Successful", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    mDialog.dismiss();
+                                    Toast.makeText(getApplicationContext(),
+                                            "Login Failed", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
             }
         });
 
@@ -122,27 +122,27 @@ public class MainActivity extends AppCompatActivity {
 
                 passwordResetDialog.setPositiveButton("Yes",
                         new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String mail = resetMail.getText().toString();
-                        mAuth.sendPasswordResetEmail(mail)
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
-                            public void onSuccess(Void aVoid) {
-                                Toast.makeText(MainActivity.this,
-                                        "Reset link sent to your email.",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(MainActivity.this,
-                                        "Error! Reset link is not sent." + e.getMessage(),
-                                        Toast.LENGTH_SHORT).show();
+                            public void onClick(DialogInterface dialog, int which) {
+                                String mail = resetMail.getText().toString();
+                                mAuth.sendPasswordResetEmail(mail)
+                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                Toast.makeText(MainActivity.this,
+                                                        "Reset link sent to your email.",
+                                                        Toast.LENGTH_SHORT).show();
+                                            }
+                                        }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(MainActivity.this,
+                                                "Error! Reset link is not sent." + e.getMessage(),
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                         });
-                    }
-                });
 
                 passwordResetDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override

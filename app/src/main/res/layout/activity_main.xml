@@ -59,7 +59,7 @@
                     android:padding="15dp"
                     android:textColor="@android:color/white"
                     android:drawableStart="@drawable/ic_baseline_lock_24"
-                android:textColorHint="@android:color/white" />
+                    android:textColorHint="@android:color/white" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
