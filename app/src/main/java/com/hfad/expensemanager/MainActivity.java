@@ -10,6 +10,9 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -30,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnLogin;
     private TextView mForgetPassword;
     private TextView mSignupHere;
+    private EditText passwordHint;
 
     private ProgressDialog mDialog;
 
@@ -56,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btn_login);
         mForgetPassword = findViewById(R.id.forget_password);
         mSignupHere = findViewById(R.id.signup_reg);
+        passwordHint = findViewById(R.id.password_login);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+
 
         // Registration activity
 
