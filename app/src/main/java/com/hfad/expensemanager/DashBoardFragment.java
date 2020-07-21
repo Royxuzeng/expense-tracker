@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.text.Layout;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +16,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,8 +30,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.hfad.expensemanager.Model.Data;
-
-import org.w3c.dom.Text;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -272,40 +269,35 @@ public class DashBoardFragment extends Fragment {
     public void incomeDataInsert() {
         AlertDialog.Builder mydialog = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        View myviewm = inflater.inflate(R.layout.custom_layout_for_insertdata, null);
-        mydialog.setView(myviewm);
+        View myview = inflater.inflate(R.layout.custom_layout_for_insert_incomedata, null);
+        mydialog.setView(myview);
         final AlertDialog dialog = mydialog.create();
 
         dialog.setCancelable(false);
 
-        final EditText edtAmount = myviewm.findViewById(R.id.amount_edt);
-        final EditText edtType = myviewm.findViewById(R.id.type_edt);
-        final EditText edtNote = myviewm.findViewById(R.id.note_edt);
+        final EditText edtAmount = myview.findViewById(R.id.amount_edt);
+        final Spinner edtType = myview.findViewById(R.id.type_income_sp);
+        final EditText edtNote = myview.findViewById(R.id.note_edt);
 
-        Button btnSave = myviewm.findViewById(R.id.btnSave);
-        Button btnCancel = myviewm.findViewById(R.id.btnCancel);
+        Button btnSave = myview.findViewById(R.id.btnSave);
+        Button btnCancel = myview.findViewById(R.id.btnCancel);
 
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String type = edtType.getText().toString().trim();
+                String type = String.valueOf(edtType.getSelectedItem());
                 String amount = edtAmount.getText().toString().trim();
                 String note = edtNote.getText().toString().trim();
 
-                if (TextUtils.isEmpty(type)) {
-                    edtType.setError("Required Field");
-                    return;
-                }
-
                 if (TextUtils.isEmpty(amount)) {
-                    edtType.setError("Required Field");
+                    edtAmount.setError("Required Field");
                     return;
                 }
 
                 int ouramountint = Integer.parseInt(amount);
 
                 if (TextUtils.isEmpty(note)) {
-                    edtType.setError("Required Field");
+                    edtNote.setError("Required Field");
                     return;
                 }
 
@@ -341,7 +333,7 @@ public class DashBoardFragment extends Fragment {
     public void expenseDataInsert() {
         AlertDialog.Builder mydialog = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        View myview = inflater.inflate(R.layout.custom_layout_for_insertdata, null);
+        View myview = inflater.inflate(R.layout.custom_layout_for_insert_expensedata, null);
         mydialog.setView(myview);
 
         final AlertDialog dialog = mydialog.create();
@@ -349,7 +341,7 @@ public class DashBoardFragment extends Fragment {
         dialog.setCancelable(false);
 
         final EditText amount = myview.findViewById(R.id.amount_edt);
-        final EditText type = myview.findViewById(R.id.type_edt);
+        final Spinner type = myview.findViewById(R.id.type_expense_sp);
         final EditText note = myview.findViewById(R.id.note_edt);
 
         Button btnSave = myview.findViewById(R.id.btnSave);
@@ -359,7 +351,7 @@ public class DashBoardFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 String tmAmount = amount.getText().toString().trim();
-                String tmtype = type.getText().toString().trim();
+                String tmtype = String.valueOf(type.getSelectedItem());
                 String tmnote = note.getText().toString().toLowerCase();
 
                 if (TextUtils.isEmpty(tmAmount)) {
@@ -368,11 +360,6 @@ public class DashBoardFragment extends Fragment {
                 }
 
                 int inamount = Integer.parseInt(tmAmount);
-
-                if (TextUtils.isEmpty(tmtype)) {
-                    type.setError("Required Field..");
-                    return;
-                }
 
                 if (TextUtils.isEmpty(tmnote)) {
                     note.setError("Required Field..");
