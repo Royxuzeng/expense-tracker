@@ -36,18 +36,31 @@
                 android:background="@drawable/edittext_background"
                 android:textColor="@android:color/white"
                 android:textColorHint="@android:color/white"
-                android:padding="15dp"/>
+                android:padding="15dp"
+                android:drawableStart="@drawable/ic_baseline_account_circle_24"/>
 
-            <EditText
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/etPasswordLayoutReg"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:hint="@string/password"
-                android:id="@+id/password_reg"
-                android:background="@drawable/edittext_background"
-                android:textColor="@android:color/white"
+                app:passwordToggleEnabled="true"
+                app:hintTextAppearance="@style/MyHintStyle"
                 android:textColorHint="@android:color/white"
-                android:padding="15dp"/>
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/password_reg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/edittext_background"
+                    android:hint="@string/password"
+                    android:inputType="textPassword"
+                    android:padding="15dp"
+                    android:textColor="@android:color/white"
+                    android:drawableStart="@drawable/ic_baseline_lock_24"
+                    android:textColorHint="@android:color/white" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <Button
                 android:layout_width="match_parent"
