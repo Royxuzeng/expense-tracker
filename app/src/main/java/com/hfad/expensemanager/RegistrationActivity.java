@@ -25,6 +25,7 @@ public class RegistrationActivity extends AppCompatActivity {
     private EditText mPass;
     private Button btnReg;
     private TextView mSignin;
+    private EditText mPassConfirm;
 
     private ProgressDialog mDialog;
 
@@ -50,12 +51,14 @@ public class RegistrationActivity extends AppCompatActivity {
         mPass = findViewById(R.id.password_reg);
         btnReg = findViewById(R.id.btn_reg);
         mSignin = findViewById(R.id.signin_here);
+        mPassConfirm = findViewById(R.id.password_reg_confirm);
 
         btnReg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String email = mEmail.getText().toString();
                 String pass = mPass.getText().toString();
+                String passConfirm = mPassConfirm.getText().toString();
 
                 if (TextUtils.isEmpty(email)) {
                     mEmail.setError("Email required..");
@@ -64,6 +67,14 @@ public class RegistrationActivity extends AppCompatActivity {
 
                 if (TextUtils.isEmpty(pass)) {
                     mPass.setError("Password required..");
+                }
+
+                if (pass.length() < 8) {
+                    mPass.setError("Password must be at least 8 characters long.");
+                }
+
+                if (!passConfirm.equals(pass)) {
+                    mPassConfirm.setError("Your password and the confirmation password do not match.");
                 }
 
                 mDialog.setMessage("Processing..");
