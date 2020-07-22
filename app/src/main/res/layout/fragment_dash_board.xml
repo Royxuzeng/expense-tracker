@@ -122,11 +122,27 @@
                     />
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:layout_width="match_parent"
                     android:id="@+id/recycler_income"
+                    android:layout_width="match_parent"
                     android:layout_height="220dp">
 
                 </androidx.recyclerview.widget.RecyclerView>
+
+                <lecho.lib.hellocharts.view.PieChartView
+                    android:id="@+id/income_pie_chart"
+                    android:padding="25dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:background="#ffffff"
+                    />
+
+                <lecho.lib.hellocharts.view.LineChartView
+                    android:id="@+id/income_line_chart"
+                    android:padding="25dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:background="#ffffff"
+                    />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -142,6 +158,22 @@
                     android:layout_height="220dp">
 
                 </androidx.recyclerview.widget.RecyclerView>
+
+                <lecho.lib.hellocharts.view.PieChartView
+                    android:id="@+id/expense_pie_chart"
+                    android:padding="25dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:background="#ffffff"
+                    />
+
+                <lecho.lib.hellocharts.view.LineChartView
+                    android:id="@+id/expense_line_chart"
+                    android:padding="25dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:background="#ffffff"
+                    />
 
             </LinearLayout>
 

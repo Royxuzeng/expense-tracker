@@ -1,5 +1,6 @@
 package com.hfad.expensemanager;
 
+import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -32,7 +33,21 @@ import com.google.firebase.database.ValueEventListener;
 import com.hfad.expensemanager.Model.Data;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import lecho.lib.hellocharts.gesture.ZoomType;
+import lecho.lib.hellocharts.model.Axis;
+import lecho.lib.hellocharts.model.AxisValue;
+import lecho.lib.hellocharts.model.Line;
+import lecho.lib.hellocharts.model.LineChartData;
+import lecho.lib.hellocharts.model.PointValue;
+import lecho.lib.hellocharts.model.ValueShape;
+import lecho.lib.hellocharts.model.Viewport;
+import lecho.lib.hellocharts.view.LineChartView;
+import lecho.lib.hellocharts.view.PieChartView;
 
 
 public class DashBoardFragment extends Fragment {
@@ -67,10 +82,27 @@ public class DashBoardFragment extends Fragment {
     private DatabaseReference mIncomeDatabase;
     private DatabaseReference mExpenseDatabase;
 
+    //list of data
+
+    private List<Data> incomeData;
+    private List<Data> expenseData;
+
     //Recycler view
 
     private RecyclerView mRecyclerIncome;
     private RecyclerView mRecyclerExpense;
+
+    //Line charts
+
+    private LineChartView mIncomeLineChart;
+    private LineChartView mExpenseLineChart;
+  //  private List<PointValue> mIncomePointValue;
+    // private List<PointValue> mExpensePointValue;
+
+    //Pie charts
+
+    private PieChartView mIncomePieChart;
+    private PieChartView mExpensePieChart;
 
 
     @Override
@@ -114,6 +146,21 @@ public class DashBoardFragment extends Fragment {
         FadeOpen = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_open);
         FadeClose = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_close);
 
+        //line charts
+
+        mIncomeLineChart = myview.findViewById(R.id.income_line_chart);
+        mExpenseLineChart = myview.findViewById(R.id.expense_line_chart);
+
+        //pie charts
+
+        mIncomePieChart = myview.findViewById(R.id.income_pie_chart);
+        mExpensePieChart = myview.findViewById(R.id.expense_pie_chart);
+
+        //list of data
+
+        incomeData = new ArrayList<>();
+        expenseData = new ArrayList<>();
+
         fab_main_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -152,18 +199,22 @@ public class DashBoardFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 int totalsum = 0;
+                incomeData = new ArrayList<>();
 
                 for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
 
                     Data data = mysnap.getValue(Data.class);
 
+                    incomeData.add(data);
+
                     totalsum += data.getAmount();
-
-                    String stResult = String.valueOf(totalsum);
-
-                    totalIncomeResult.setText(stResult + ".00");
-
                 }
+
+                String stResult = String.valueOf(totalsum);
+
+                totalIncomeResult.setText(stResult + ".00");
+
+                updateLineChart(mIncomeLineChart, incomeData);
             }
 
             @Override
@@ -179,18 +230,23 @@ public class DashBoardFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 int totalsum = 0;
+                expenseData = new ArrayList<>();
 
                 for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
 
                     Data data = mysnap.getValue(Data.class);
 
+                    expenseData.add(data);
+
                     totalsum += data.getAmount();
-
-                    String stResult = String.valueOf(totalsum);
-
-                    totalExpenseResult.setText(stResult + ".00");
-
                 }
+
+                String stResult = String.valueOf(totalsum);
+
+                totalExpenseResult.setText(stResult + ".00");
+
+                updateLineChart(mExpenseLineChart, expenseData);
+
             }
 
             @Override
@@ -388,6 +444,89 @@ public class DashBoardFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    // update line charts
+
+    public void updateLineChart(LineChartView lineChart, List<Data> list) {
+        System.out.println("yeah! Successfully updated!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        List<PointValue> pointValues = new ArrayList<>();
+        List<AxisValue> axisValues = new ArrayList<>();
+
+        HashMap<String, Integer> map = new HashMap<>();
+        List<String> dates = new ArrayList<>();
+        Data data;
+        String date;
+        int amount;
+
+        for (int i = 0; i < list.size(); i++) {
+            data = list.get(i);
+            date = data.getDate();
+
+            if (map.get(date) == null) {
+                amount = data.getAmount();
+                dates.add(date);
+            } else {
+                amount = map.get(date) + data.getAmount();
+            }
+
+            map.put(date, amount);
+
+        }
+
+        for(int i = 0; i < dates.size(); i++) {
+            axisValues.add(new AxisValue(i).setLabel(dates.get(i)));
+
+            pointValues.add(new PointValue(i, map.get(dates.get(i))));
+        }
+
+        Line line = new Line(pointValues).setColor(Color.parseColor("#3700B3"));
+        List<Line> lines = new ArrayList<Line>();
+
+        line.setShape(ValueShape.CIRCLE);
+        line.setCubic(false);
+        line.setFilled(false);
+        line.setHasLabels(true);
+        line.setHasLines(true);
+        line.setHasPoints(true);
+        lines.add(line);
+
+        LineChartData lineChartData = new LineChartData();
+        lineChartData.setLines(lines);
+
+        //axis X
+
+        Axis axisX = new Axis();
+        axisX.setHasTiltedLabels(true);
+        axisX.setTextColor(Color.parseColor("#D6D6D9"));
+
+        axisX.setTextSize(8);// font size
+        axisX.setMaxLabelChars(7);//maximum axis x
+        axisX.setValues(axisValues);
+        lineChartData.setAxisXBottom(axisX);
+        axisX.setHasLines(true);
+
+        //axis Y
+
+        Axis axisY = new Axis();
+        axisY.setName("$"); //label
+        axisY.setTextSize(8); //font size
+        lineChartData.setAxisYLeft(axisY);
+
+        //properties for line charts
+
+        lineChart.setInteractive(true);
+        lineChart.setZoomType(ZoomType.HORIZONTAL);
+        lineChart.setMaxZoom((float) 3);
+        lineChart.setLineChartData(lineChartData);
+        lineChart.setVisibility(View.VISIBLE);
+
+        Viewport v = new Viewport(lineChart.getMaximumViewport());
+        v.left = 0;
+        v.left = 0;
+        v.right= 6;
+
+        lineChart.setCurrentViewport(v);
     }
 
     @Override
