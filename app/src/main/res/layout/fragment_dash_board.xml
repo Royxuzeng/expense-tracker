@@ -124,7 +124,7 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_income"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp">
+                    android:layout_height="180dp">
 
                 </androidx.recyclerview.widget.RecyclerView>
 
@@ -132,7 +132,7 @@
                     android:id="@+id/income_pie_chart"
                     android:padding="25dp"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="240dp"
                     android:background="#ffffff"
                     />
 
@@ -155,7 +155,7 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_expense"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp">
+                    android:layout_height="180dp">
 
                 </androidx.recyclerview.widget.RecyclerView>
 
@@ -163,7 +163,7 @@
                     android:id="@+id/expense_pie_chart"
                     android:padding="25dp"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="240dp"
                     android:background="#ffffff"
                     />
 

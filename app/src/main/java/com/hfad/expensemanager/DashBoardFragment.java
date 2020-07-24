@@ -37,13 +37,17 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import lecho.lib.hellocharts.gesture.ZoomType;
+import lecho.lib.hellocharts.listener.PieChartOnValueSelectListener;
 import lecho.lib.hellocharts.model.Axis;
 import lecho.lib.hellocharts.model.AxisValue;
 import lecho.lib.hellocharts.model.Line;
 import lecho.lib.hellocharts.model.LineChartData;
+import lecho.lib.hellocharts.model.PieChartData;
 import lecho.lib.hellocharts.model.PointValue;
+import lecho.lib.hellocharts.model.SliceValue;
 import lecho.lib.hellocharts.model.ValueShape;
 import lecho.lib.hellocharts.model.Viewport;
 import lecho.lib.hellocharts.view.LineChartView;
@@ -96,13 +100,22 @@ public class DashBoardFragment extends Fragment {
 
     private LineChartView mIncomeLineChart;
     private LineChartView mExpenseLineChart;
-  //  private List<PointValue> mIncomePointValue;
-    // private List<PointValue> mExpensePointValue;
 
     //Pie charts
 
     private PieChartView mIncomePieChart;
     private PieChartView mExpensePieChart;
+
+    //types
+
+    String[] incomeTypes = {"pocket money", "salary", "transfer", "others"};
+    String[] expenseTypes = {"food and drinks", "stationery", "transportation",
+                             "entertainment", "health", "others"};
+
+    //colors
+
+    int[] colors = {Color.rgb(204, 153, 255), Color.rgb(255, 153, 153), Color.rgb(102, 204, 255),
+                    Color.rgb(153, 255, 204), Color.rgb(255, 255, 153), Color.rgb(255, 153, 51)};
 
 
     @Override
@@ -199,6 +212,7 @@ public class DashBoardFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 int totalsum = 0;
+
                 incomeData = new ArrayList<>();
 
                 for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
@@ -215,6 +229,8 @@ public class DashBoardFragment extends Fragment {
                 totalIncomeResult.setText(stResult + ".00");
 
                 updateLineChart(mIncomeLineChart, incomeData);
+
+                updatePieChart(mIncomePieChart, incomeData, incomeTypes, totalsum);
             }
 
             @Override
@@ -246,6 +262,8 @@ public class DashBoardFragment extends Fragment {
                 totalExpenseResult.setText(stResult + ".00");
 
                 updateLineChart(mExpenseLineChart, expenseData);
+
+                updatePieChart(mExpensePieChart, expenseData, expenseTypes, totalsum);
 
             }
 
@@ -449,7 +467,6 @@ public class DashBoardFragment extends Fragment {
     // update line charts
 
     public void updateLineChart(LineChartView lineChart, List<Data> list) {
-        System.out.println("yeah! Successfully updated!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         List<PointValue> pointValues = new ArrayList<>();
         List<AxisValue> axisValues = new ArrayList<>();
 
@@ -480,7 +497,7 @@ public class DashBoardFragment extends Fragment {
             pointValues.add(new PointValue(i, map.get(dates.get(i))));
         }
 
-        Line line = new Line(pointValues).setColor(Color.parseColor("#3700B3"));
+        Line line = new Line(pointValues).setColor(Color.parseColor("#00BCD4"));
         List<Line> lines = new ArrayList<Line>();
 
         line.setShape(ValueShape.CIRCLE);
@@ -509,7 +526,6 @@ public class DashBoardFragment extends Fragment {
         //axis Y
 
         Axis axisY = new Axis();
-        axisY.setName("$"); //label
         axisY.setTextSize(8); //font size
         lineChartData.setAxisYLeft(axisY);
 
@@ -527,6 +543,63 @@ public class DashBoardFragment extends Fragment {
         v.right= 6;
 
         lineChart.setCurrentViewport(v);
+    }
+
+    //update income pie charts
+
+    public void updatePieChart(PieChartView pieChart, List<Data> list, String[] types, int amount) {
+        final int sum = amount;
+        HashMap<String, Integer> map = new HashMap<>();
+        Data data;
+        String type;
+
+        for(int i = 0; i < types.length; i++) {
+            map.put(types[i], 0);
+        }
+
+        for(int i = 0; i < list.size(); i++) {
+            data = list.get(i);
+            type = data.getType();
+            System.out.println(type);
+            map.put(type, map.get(type) + data.getAmount());
+        }
+
+        List<SliceValue> sliceValues = new ArrayList<>();
+
+        for(int i = 0; i < types.length; i++) {
+            float count = map.get(types[i]);
+            if(count != 0) {
+                sliceValues.add(new SliceValue(map.get(types[i])).setLabel(types[i]).setColor(colors[i]));
+            }
+        }
+
+        PieChartData pieChartData = new PieChartData();
+        pieChartData.setValues(sliceValues);
+        pieChartData.setHasLabels(true);
+        pieChartData.setHasCenterCircle(true);
+        pieChartData.setCenterCircleColor(Color.WHITE);
+        pieChartData.setCenterCircleScale(0.5f);
+        pieChartData.setCenterText1("total:");
+        pieChartData.setCenterText1Color(Color.BLACK);
+        pieChartData.setCenterText1FontSize(18);
+        pieChartData.setCenterText2(String.valueOf(amount));
+        pieChartData.setCenterText2Color(Color.BLACK);
+        pieChartData.setCenterText2FontSize(14);
+
+        pieChart.setPieChartData(pieChartData);
+        pieChart.setValueSelectionEnabled(true);
+        pieChart.setCircleFillRatio(1f);
+        pieChart.setOnValueTouchListener(new PieChartOnValueSelectListener() {
+            @Override
+            public void onValueDeselected() {
+
+            }
+
+            @Override
+            public void onValueSelected(int arg0, SliceValue value) {
+                Toast.makeText(getActivity(),
+                        "Selected: " + String.format("%.2f%%", value.getValue() / sum * 100), Toast.LENGTH_SHORT).show();
+            }});
     }
 
     @Override

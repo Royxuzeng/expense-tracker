@@ -19,7 +19,7 @@
     </string-array>
     <string-array name="expense_type">
         <item>food and drinks</item>
-        <item>books and stationery</item>
+        <item>stationery</item>
         <item>transportation</item>
         <item>entertainment</item>
         <item>health</item>
