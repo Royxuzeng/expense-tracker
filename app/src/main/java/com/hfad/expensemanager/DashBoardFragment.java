@@ -239,6 +239,8 @@ public class DashBoardFragment extends Fragment {
             }
         };
 
+        mRecycler.setAdapter(incomeAdapter);
+
         final FirebaseRecyclerAdapter<Data, ExpenseViewHolder> expenseAdapter = new FirebaseRecyclerAdapter<Data, ExpenseViewHolder>
                 (
                         Data.class,
@@ -280,14 +282,14 @@ public class DashBoardFragment extends Fragment {
 
                     //default recycler and charts
 
+                    income_chosen_btn.setChecked(true);
+
                     dataList = new ArrayList<>();
 
                     for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
 
                         dataList.add(mysnap.getValue(Data.class));
                     }
-
-                    mRecycler.setAdapter(incomeAdapter);
 
                     updateLineChart(mLineChart, dataList);
 
