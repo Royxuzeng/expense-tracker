@@ -17,6 +17,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -87,23 +88,26 @@ public class DashBoardFragment extends Fragment {
 
     //list of data
 
-    private List<Data> incomeData;
-    private List<Data> expenseData;
+    private List<Data> dataList;
+    private int totalsum;
+    private boolean isDefault;
 
     //Recycler view
 
-    private RecyclerView mRecyclerIncome;
-    private RecyclerView mRecyclerExpense;
+    private RecyclerView mRecycler;
 
     //Line charts
 
-    private LineChartView mIncomeLineChart;
-    private LineChartView mExpenseLineChart;
+    private LineChartView mLineChart;
 
     //Pie charts
 
-    private PieChartView mIncomePieChart;
-    private PieChartView mExpensePieChart;
+    private PieChartView mPieChart;
+
+    //radio button
+
+    private RadioButton income_chosen_btn;
+    private RadioButton expense_chosen_btn;
 
     //types
 
@@ -150,8 +154,7 @@ public class DashBoardFragment extends Fragment {
 
         //Recycler
 
-        mRecyclerIncome = myview.findViewById(R.id.recycler_income);
-        mRecyclerExpense = myview.findViewById(R.id.recycler_expense);
+        mRecycler = myview.findViewById(R.id.recycler_income);
 
         // Connect animation
 
@@ -160,18 +163,22 @@ public class DashBoardFragment extends Fragment {
 
         //line charts
 
-        mIncomeLineChart = myview.findViewById(R.id.income_line_chart);
-        mExpenseLineChart = myview.findViewById(R.id.expense_line_chart);
+        mLineChart = myview.findViewById(R.id.income_line_chart);
 
         //pie charts
 
-        mIncomePieChart = myview.findViewById(R.id.income_pie_chart);
-        mExpensePieChart = myview.findViewById(R.id.expense_pie_chart);
+        mPieChart = myview.findViewById(R.id.income_pie_chart);
 
         //list of data
 
-        incomeData = new ArrayList<>();
-        expenseData = new ArrayList<>();
+        dataList = new ArrayList<>();
+
+        isDefault = true;
+
+        //income and expense button
+
+        income_chosen_btn = myview.findViewById(R.id.income_chosen);
+        expense_chosen_btn = myview.findViewById(R.id.expense_chosen);
 
         fab_main_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -204,21 +211,63 @@ public class DashBoardFragment extends Fragment {
             }
         });
 
+        //Recycler
+
+        LinearLayoutManager layoutManagerIncome = new LinearLayoutManager(getActivity(),
+                LinearLayoutManager.HORIZONTAL, false);
+
+        layoutManagerIncome.setStackFromEnd(true);
+        layoutManagerIncome.setReverseLayout(true);
+        mRecycler.setHasFixedSize(true);
+        mRecycler.setLayoutManager(layoutManagerIncome);
+
+        final FirebaseRecyclerAdapter<Data, IncomeViewHolder> incomeAdapter = new FirebaseRecyclerAdapter<Data, IncomeViewHolder>
+                (
+                        Data.class,
+                        R.layout.dashboard_income,
+                        DashBoardFragment.IncomeViewHolder.class,
+                        mIncomeDatabase
+
+                ) {
+            @Override
+            protected void populateViewHolder(IncomeViewHolder viewHolder, final Data model, final int position) {
+
+                viewHolder.setIncomeType(model.getType());
+                viewHolder.setIncomeDate(model.getDate());
+                viewHolder.setIncomeAmount(model.getAmount());
+
+            }
+        };
+
+        final FirebaseRecyclerAdapter<Data, ExpenseViewHolder> expenseAdapter = new FirebaseRecyclerAdapter<Data, ExpenseViewHolder>
+                (
+                        Data.class,
+                        R.layout.dashboard_expense,
+                        DashBoardFragment.ExpenseViewHolder.class,
+                        mExpenseDatabase
+
+                ) {
+            @Override
+            protected void populateViewHolder(ExpenseViewHolder viewHolder, final Data model, final int position) {
+
+                viewHolder.setExpenseType(model.getType());
+                viewHolder.setExpenseDate(model.getDate());
+                viewHolder.setExpenseAmount(model.getAmount());
+
+            }
+        };
+
         //Calculate total income
 
         mIncomeDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                int totalsum = 0;
-
-                incomeData = new ArrayList<>();
+                totalsum = 0;
 
                 for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
 
                     Data data = mysnap.getValue(Data.class);
-
-                    incomeData.add(data);
 
                     totalsum += data.getAmount();
                 }
@@ -227,9 +276,26 @@ public class DashBoardFragment extends Fragment {
 
                 totalIncomeResult.setText(stResult + ".00");
 
-                updateLineChart(mIncomeLineChart, incomeData);
+                if(isDefault) {
 
-                updatePieChart(mIncomePieChart, incomeData, incomeTypes, totalsum);
+                    //default recycler and charts
+
+                    dataList = new ArrayList<>();
+
+                    for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
+
+                        dataList.add(mysnap.getValue(Data.class));
+                    }
+
+                    mRecycler.setAdapter(incomeAdapter);
+
+                    updateLineChart(mLineChart, dataList);
+
+                    updatePieChart(mPieChart, dataList, incomeTypes, totalsum);
+
+                    isDefault = false;
+                }
+
             }
 
             @Override
@@ -244,14 +310,12 @@ public class DashBoardFragment extends Fragment {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                int totalsum = 0;
-                expenseData = new ArrayList<>();
+                totalsum = 0;
 
                 for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
 
                     Data data = mysnap.getValue(Data.class);
 
-                    expenseData.add(data);
 
                     totalsum += data.getAmount();
                 }
@@ -259,10 +323,6 @@ public class DashBoardFragment extends Fragment {
                 String stResult = String.valueOf(totalsum);
 
                 totalExpenseResult.setText(stResult + ".00");
-
-                updateLineChart(mExpenseLineChart, expenseData);
-
-                updatePieChart(mExpensePieChart, expenseData, expenseTypes, totalsum);
 
             }
 
@@ -272,23 +332,77 @@ public class DashBoardFragment extends Fragment {
             }
         });
 
-        //Recycler
+        //update recycler and charts
 
-        LinearLayoutManager layoutManagerIncome = new LinearLayoutManager(getActivity(),
-                LinearLayoutManager.HORIZONTAL, false);
+        income_chosen_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mIncomeDatabase.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-        layoutManagerIncome.setStackFromEnd(true);
-        layoutManagerIncome.setReverseLayout(true);
-        mRecyclerIncome.setHasFixedSize(true);
-        mRecyclerIncome.setLayoutManager(layoutManagerIncome);
+                        totalsum = 0;
 
-        LinearLayoutManager layoutManagerExpense = new LinearLayoutManager(getActivity(),
-                LinearLayoutManager.HORIZONTAL, false);
+                        dataList = new ArrayList<>();
 
-        layoutManagerExpense.setStackFromEnd(true);
-        layoutManagerExpense.setReverseLayout(true);
-        mRecyclerExpense.setHasFixedSize(true);
-        mRecyclerExpense.setLayoutManager(layoutManagerExpense);
+                        for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
+
+                            Data data = mysnap.getValue(Data.class);
+
+                            dataList.add(data);
+
+                            totalsum += data.getAmount();
+                        }
+
+                        mRecycler.setAdapter(incomeAdapter);
+
+                        updateLineChart(mLineChart, dataList);
+
+                        updatePieChart(mPieChart, dataList, incomeTypes, totalsum);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+            }
+        });
+
+        expense_chosen_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mExpenseDatabase.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        totalsum = 0;
+
+                        dataList = new ArrayList<>();
+
+                        for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
+
+                            Data data = mysnap.getValue(Data.class);
+
+                            dataList.add(data);
+
+                            totalsum += data.getAmount();
+                        }
+
+                        mRecycler.setAdapter(expenseAdapter);
+
+                        updateLineChart(mLineChart, dataList);
+
+                        updatePieChart(mPieChart, dataList, expenseTypes, totalsum);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+            }
+        });
 
         return myview;
     }
@@ -559,7 +673,6 @@ public class DashBoardFragment extends Fragment {
         for(int i = 0; i < list.size(); i++) {
             data = list.get(i);
             type = data.getType();
-            System.out.println(type);
             map.put(type, map.get(type) + data.getAmount());
         }
 
@@ -599,51 +712,6 @@ public class DashBoardFragment extends Fragment {
                 Toast.makeText(getActivity(),
                         "Selected: " + String.format("%.2f%%", value.getValue() / sum * 100), Toast.LENGTH_SHORT).show();
             }});
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        FirebaseRecyclerAdapter<Data, IncomeViewHolder> incomeAdapter = new FirebaseRecyclerAdapter<Data, IncomeViewHolder>
-                (
-                        Data.class,
-                        R.layout.dashboard_income,
-                        DashBoardFragment.IncomeViewHolder.class,
-                        mIncomeDatabase
-
-                ) {
-            @Override
-            protected void populateViewHolder(IncomeViewHolder viewHolder, final Data model, final int position) {
-
-                viewHolder.setIncomeType(model.getType());
-                viewHolder.setIncomeDate(model.getDate());
-                viewHolder.setIncomeAmount(model.getAmount());
-
-            }
-        };
-
-        mRecyclerIncome.setAdapter(incomeAdapter);
-
-        FirebaseRecyclerAdapter<Data, ExpenseViewHolder> expenseAdapter = new FirebaseRecyclerAdapter<Data, ExpenseViewHolder>
-                (
-                        Data.class,
-                        R.layout.dashboard_expense,
-                        DashBoardFragment.ExpenseViewHolder.class,
-                        mExpenseDatabase
-
-                ) {
-            @Override
-            protected void populateViewHolder(ExpenseViewHolder viewHolder, final Data model, final int position) {
-
-                viewHolder.setExpenseType(model.getType());
-                viewHolder.setExpenseDate(model.getDate());
-                viewHolder.setExpenseAmount(model.getAmount());
-
-            }
-        };
-
-        mRecyclerExpense.setAdapter(expenseAdapter);
     }
 
     //for income data
