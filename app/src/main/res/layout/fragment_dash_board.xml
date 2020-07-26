@@ -112,36 +112,50 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:orientation="vertical">
-
-                <TextView
+                
+                <RadioGroup
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Income:"
-                    android:textAppearance="?android:textAppearanceLarge"
-                    android:padding="10dp"
-                    />
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+                    <RadioButton
+                        android:id="@+id/income_chosen"
+                        android:checked="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Income" />
+
+                    <RadioButton
+                        android:id="@+id/expense_chosen"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Expense" />
+
+                </RadioGroup>
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:layout_width="match_parent"
                     android:id="@+id/recycler_income"
-                    android:layout_height="220dp">
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp">
 
                 </androidx.recyclerview.widget.RecyclerView>
 
-                <TextView
+                <lecho.lib.hellocharts.view.PieChartView
+                    android:id="@+id/income_pie_chart"
+                    android:padding="25dp"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Expense:"
-                    android:textAppearance="?android:textAppearanceLarge"
-                    android:padding="10dp"
+                    android:layout_height="240dp"
+                    android:background="#ffffff"
                     />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_expense"
+                <lecho.lib.hellocharts.view.LineChartView
+                    android:id="@+id/income_line_chart"
+                    android:padding="25dp"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp">
-
-                </androidx.recyclerview.widget.RecyclerView>
+                    android:layout_height="200dp"
+                    android:background="#ffffff"
+                    />
 
             </LinearLayout>
 

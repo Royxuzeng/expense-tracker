@@ -1,5 +1,6 @@
 package com.hfad.expensemanager;
 
+import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -8,7 +9,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.text.Layout;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +17,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,10 +33,25 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.hfad.expensemanager.Model.Data;
 
-import org.w3c.dom.Text;
-
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import lecho.lib.hellocharts.gesture.ZoomType;
+import lecho.lib.hellocharts.listener.PieChartOnValueSelectListener;
+import lecho.lib.hellocharts.model.Axis;
+import lecho.lib.hellocharts.model.AxisValue;
+import lecho.lib.hellocharts.model.Line;
+import lecho.lib.hellocharts.model.LineChartData;
+import lecho.lib.hellocharts.model.PieChartData;
+import lecho.lib.hellocharts.model.PointValue;
+import lecho.lib.hellocharts.model.SliceValue;
+import lecho.lib.hellocharts.model.ValueShape;
+import lecho.lib.hellocharts.model.Viewport;
+import lecho.lib.hellocharts.view.LineChartView;
+import lecho.lib.hellocharts.view.PieChartView;
 
 
 public class DashBoardFragment extends Fragment {
@@ -70,10 +86,39 @@ public class DashBoardFragment extends Fragment {
     private DatabaseReference mIncomeDatabase;
     private DatabaseReference mExpenseDatabase;
 
+    //list of data
+
+    private List<Data> dataList;
+    private int totalsum;
+    private boolean isDefault;
+
     //Recycler view
 
-    private RecyclerView mRecyclerIncome;
-    private RecyclerView mRecyclerExpense;
+    private RecyclerView mRecycler;
+
+    //Line charts
+
+    private LineChartView mLineChart;
+
+    //Pie charts
+
+    private PieChartView mPieChart;
+
+    //radio button
+
+    private RadioButton income_chosen_btn;
+    private RadioButton expense_chosen_btn;
+
+    //types
+
+    String[] incomeTypes = {"pocket money", "salary", "transfer", "others"};
+    String[] expenseTypes = {"food and drinks", "stationery", "transportation",
+                             "entertainment", "health", "others"};
+
+    //colors
+
+    int[] colors = {Color.rgb(204, 153, 255), Color.rgb(255, 153, 153), Color.rgb(102, 204, 255),
+                    Color.rgb(153, 255, 204), Color.rgb(255, 255, 153), Color.rgb(255, 153, 51)};
 
 
     @Override
@@ -109,13 +154,31 @@ public class DashBoardFragment extends Fragment {
 
         //Recycler
 
-        mRecyclerIncome = myview.findViewById(R.id.recycler_income);
-        mRecyclerExpense = myview.findViewById(R.id.recycler_expense);
+        mRecycler = myview.findViewById(R.id.recycler_income);
 
         // Connect animation
 
         FadeOpen = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_open);
         FadeClose = AnimationUtils.loadAnimation(getActivity(), R.anim.fade_close);
+
+        //line charts
+
+        mLineChart = myview.findViewById(R.id.income_line_chart);
+
+        //pie charts
+
+        mPieChart = myview.findViewById(R.id.income_pie_chart);
+
+        //list of data
+
+        dataList = new ArrayList<>();
+
+        isDefault = true;
+
+        //income and expense button
+
+        income_chosen_btn = myview.findViewById(R.id.income_chosen);
+        expense_chosen_btn = myview.findViewById(R.id.expense_chosen);
 
         fab_main_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -148,25 +211,93 @@ public class DashBoardFragment extends Fragment {
             }
         });
 
+        //Recycler
+
+        LinearLayoutManager layoutManagerIncome = new LinearLayoutManager(getActivity(),
+                LinearLayoutManager.HORIZONTAL, false);
+
+        layoutManagerIncome.setStackFromEnd(true);
+        layoutManagerIncome.setReverseLayout(true);
+        mRecycler.setHasFixedSize(true);
+        mRecycler.setLayoutManager(layoutManagerIncome);
+
+        final FirebaseRecyclerAdapter<Data, IncomeViewHolder> incomeAdapter = new FirebaseRecyclerAdapter<Data, IncomeViewHolder>
+                (
+                        Data.class,
+                        R.layout.dashboard_income,
+                        DashBoardFragment.IncomeViewHolder.class,
+                        mIncomeDatabase
+
+                ) {
+            @Override
+            protected void populateViewHolder(IncomeViewHolder viewHolder, final Data model, final int position) {
+
+                viewHolder.setIncomeType(model.getType());
+                viewHolder.setIncomeDate(model.getDate());
+                viewHolder.setIncomeAmount(model.getAmount());
+
+            }
+        };
+
+        mRecycler.setAdapter(incomeAdapter);
+
+        final FirebaseRecyclerAdapter<Data, ExpenseViewHolder> expenseAdapter = new FirebaseRecyclerAdapter<Data, ExpenseViewHolder>
+                (
+                        Data.class,
+                        R.layout.dashboard_expense,
+                        DashBoardFragment.ExpenseViewHolder.class,
+                        mExpenseDatabase
+
+                ) {
+            @Override
+            protected void populateViewHolder(ExpenseViewHolder viewHolder, final Data model, final int position) {
+
+                viewHolder.setExpenseType(model.getType());
+                viewHolder.setExpenseDate(model.getDate());
+                viewHolder.setExpenseAmount(model.getAmount());
+
+            }
+        };
+
         //Calculate total income
 
         mIncomeDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                int totalsum = 0;
+                totalsum = 0;
 
                 for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
 
                     Data data = mysnap.getValue(Data.class);
 
                     totalsum += data.getAmount();
-
-                    String stResult = String.valueOf(totalsum);
-
-                    totalIncomeResult.setText(stResult + ".00");
-
                 }
+
+                String stResult = String.valueOf(totalsum);
+
+                totalIncomeResult.setText(stResult + ".00");
+
+                if(isDefault) {
+
+                    //default recycler and charts
+
+                    income_chosen_btn.setChecked(true);
+
+                    dataList = new ArrayList<>();
+
+                    for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
+
+                        dataList.add(mysnap.getValue(Data.class));
+                    }
+
+                    updateLineChart(mLineChart, dataList);
+
+                    updatePieChart(mPieChart, dataList, incomeTypes, totalsum);
+
+                    isDefault = false;
+                }
+
             }
 
             @Override
@@ -181,19 +312,20 @@ public class DashBoardFragment extends Fragment {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                int totalsum = 0;
+                totalsum = 0;
 
                 for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
 
                     Data data = mysnap.getValue(Data.class);
 
+
                     totalsum += data.getAmount();
-
-                    String stResult = String.valueOf(totalsum);
-
-                    totalExpenseResult.setText(stResult + ".00");
-
                 }
+
+                String stResult = String.valueOf(totalsum);
+
+                totalExpenseResult.setText(stResult + ".00");
+
             }
 
             @Override
@@ -202,23 +334,77 @@ public class DashBoardFragment extends Fragment {
             }
         });
 
-        //Recycler
+        //update recycler and charts
 
-        LinearLayoutManager layoutManagerIncome = new LinearLayoutManager(getActivity(),
-                LinearLayoutManager.HORIZONTAL, false);
+        income_chosen_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mIncomeDatabase.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-        layoutManagerIncome.setStackFromEnd(true);
-        layoutManagerIncome.setReverseLayout(true);
-        mRecyclerIncome.setHasFixedSize(true);
-        mRecyclerIncome.setLayoutManager(layoutManagerIncome);
+                        totalsum = 0;
 
-        LinearLayoutManager layoutManagerExpense = new LinearLayoutManager(getActivity(),
-                LinearLayoutManager.HORIZONTAL, false);
+                        dataList = new ArrayList<>();
 
-        layoutManagerExpense.setStackFromEnd(true);
-        layoutManagerExpense.setReverseLayout(true);
-        mRecyclerExpense.setHasFixedSize(true);
-        mRecyclerExpense.setLayoutManager(layoutManagerExpense);
+                        for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
+
+                            Data data = mysnap.getValue(Data.class);
+
+                            dataList.add(data);
+
+                            totalsum += data.getAmount();
+                        }
+
+                        mRecycler.setAdapter(incomeAdapter);
+
+                        updateLineChart(mLineChart, dataList);
+
+                        updatePieChart(mPieChart, dataList, incomeTypes, totalsum);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+            }
+        });
+
+        expense_chosen_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mExpenseDatabase.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        totalsum = 0;
+
+                        dataList = new ArrayList<>();
+
+                        for(DataSnapshot mysnap: dataSnapshot.getChildren()) {
+
+                            Data data = mysnap.getValue(Data.class);
+
+                            dataList.add(data);
+
+                            totalsum += data.getAmount();
+                        }
+
+                        mRecycler.setAdapter(expenseAdapter);
+
+                        updateLineChart(mLineChart, dataList);
+
+                        updatePieChart(mPieChart, dataList, expenseTypes, totalsum);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+            }
+        });
 
         return myview;
     }
@@ -272,40 +458,35 @@ public class DashBoardFragment extends Fragment {
     public void incomeDataInsert() {
         AlertDialog.Builder mydialog = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        View myviewm = inflater.inflate(R.layout.custom_layout_for_insertdata, null);
-        mydialog.setView(myviewm);
+        View myview = inflater.inflate(R.layout.custom_layout_for_insert_incomedata, null);
+        mydialog.setView(myview);
         final AlertDialog dialog = mydialog.create();
 
         dialog.setCancelable(false);
 
-        final EditText edtAmount = myviewm.findViewById(R.id.amount_edt);
-        final EditText edtType = myviewm.findViewById(R.id.type_edt);
-        final EditText edtNote = myviewm.findViewById(R.id.note_edt);
+        final EditText edtAmount = myview.findViewById(R.id.amount_edt);
+        final Spinner edtType = myview.findViewById(R.id.type_income_sp);
+        final EditText edtNote = myview.findViewById(R.id.note_edt);
 
-        Button btnSave = myviewm.findViewById(R.id.btnSave);
-        Button btnCancel = myviewm.findViewById(R.id.btnCancel);
+        Button btnSave = myview.findViewById(R.id.btnSave);
+        Button btnCancel = myview.findViewById(R.id.btnCancel);
 
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String type = edtType.getText().toString().trim();
+                String type = String.valueOf(edtType.getSelectedItem());
                 String amount = edtAmount.getText().toString().trim();
                 String note = edtNote.getText().toString().trim();
 
-                if (TextUtils.isEmpty(type)) {
-                    edtType.setError("Required Field");
-                    return;
-                }
-
                 if (TextUtils.isEmpty(amount)) {
-                    edtType.setError("Required Field");
+                    edtAmount.setError("Required Field");
                     return;
                 }
 
                 int ouramountint = Integer.parseInt(amount);
 
                 if (TextUtils.isEmpty(note)) {
-                    edtType.setError("Required Field");
+                    edtNote.setError("Required Field");
                     return;
                 }
 
@@ -341,7 +522,7 @@ public class DashBoardFragment extends Fragment {
     public void expenseDataInsert() {
         AlertDialog.Builder mydialog = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        View myview = inflater.inflate(R.layout.custom_layout_for_insertdata, null);
+        View myview = inflater.inflate(R.layout.custom_layout_for_insert_expensedata, null);
         mydialog.setView(myview);
 
         final AlertDialog dialog = mydialog.create();
@@ -349,7 +530,7 @@ public class DashBoardFragment extends Fragment {
         dialog.setCancelable(false);
 
         final EditText amount = myview.findViewById(R.id.amount_edt);
-        final EditText type = myview.findViewById(R.id.type_edt);
+        final Spinner type = myview.findViewById(R.id.type_expense_sp);
         final EditText note = myview.findViewById(R.id.note_edt);
 
         Button btnSave = myview.findViewById(R.id.btnSave);
@@ -359,7 +540,7 @@ public class DashBoardFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 String tmAmount = amount.getText().toString().trim();
-                String tmtype = type.getText().toString().trim();
+                String tmtype = String.valueOf(type.getSelectedItem());
                 String tmnote = note.getText().toString().toLowerCase();
 
                 if (TextUtils.isEmpty(tmAmount)) {
@@ -368,11 +549,6 @@ public class DashBoardFragment extends Fragment {
                 }
 
                 int inamount = Integer.parseInt(tmAmount);
-
-                if (TextUtils.isEmpty(tmtype)) {
-                    type.setError("Required Field..");
-                    return;
-                }
 
                 if (TextUtils.isEmpty(tmnote)) {
                     note.setError("Required Field..");
@@ -403,49 +579,141 @@ public class DashBoardFragment extends Fragment {
         dialog.show();
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    // update line charts
 
-        FirebaseRecyclerAdapter<Data, IncomeViewHolder> incomeAdapter = new FirebaseRecyclerAdapter<Data, IncomeViewHolder>
-                (
-                        Data.class,
-                        R.layout.dashboard_income,
-                        DashBoardFragment.IncomeViewHolder.class,
-                        mIncomeDatabase
+    public void updateLineChart(LineChartView lineChart, List<Data> list) {
+        List<PointValue> pointValues = new ArrayList<>();
+        List<AxisValue> axisValues = new ArrayList<>();
 
-                ) {
+        HashMap<String, Integer> map = new HashMap<>();
+        List<String> dates = new ArrayList<>();
+        Data data;
+        String date;
+        int amount;
+
+        for (int i = 0; i < list.size(); i++) {
+            data = list.get(i);
+            date = data.getDate();
+
+            if (map.get(date) == null) {
+                amount = data.getAmount();
+                dates.add(date);
+            } else {
+                amount = map.get(date) + data.getAmount();
+            }
+
+            map.put(date, amount);
+
+        }
+
+        for(int i = 0; i < dates.size(); i++) {
+            axisValues.add(new AxisValue(i).setLabel(dates.get(i)));
+
+            pointValues.add(new PointValue(i, map.get(dates.get(i))));
+        }
+
+        Line line = new Line(pointValues).setColor(Color.parseColor("#00BCD4"));
+        List<Line> lines = new ArrayList<Line>();
+
+        line.setShape(ValueShape.CIRCLE);
+        line.setCubic(false);
+        line.setFilled(false);
+        line.setHasLabels(true);
+        line.setHasLines(true);
+        line.setHasPoints(true);
+        lines.add(line);
+
+        LineChartData lineChartData = new LineChartData();
+        lineChartData.setLines(lines);
+
+        //axis X
+
+        Axis axisX = new Axis();
+        axisX.setHasTiltedLabels(true);
+        axisX.setTextColor(Color.parseColor("#D6D6D9"));
+
+        axisX.setTextSize(8);// font size
+        axisX.setMaxLabelChars(7);//maximum axis x
+        axisX.setValues(axisValues);
+        lineChartData.setAxisXBottom(axisX);
+        axisX.setHasLines(true);
+
+        //axis Y
+
+        Axis axisY = new Axis();
+        axisY.setTextSize(8); //font size
+        lineChartData.setAxisYLeft(axisY);
+
+        //properties for line charts
+
+        lineChart.setInteractive(true);
+        lineChart.setZoomType(ZoomType.HORIZONTAL);
+        lineChart.setMaxZoom((float) 3);
+        lineChart.setLineChartData(lineChartData);
+        lineChart.setVisibility(View.VISIBLE);
+
+        Viewport v = new Viewport(lineChart.getMaximumViewport());
+        v.left = 0;
+        v.left = 0;
+        v.right= 6;
+
+        lineChart.setCurrentViewport(v);
+    }
+
+    //update income pie charts
+
+    public void updatePieChart(PieChartView pieChart, List<Data> list, String[] types, int amount) {
+        final int sum = amount;
+        HashMap<String, Integer> map = new HashMap<>();
+        Data data;
+        String type;
+
+        for(int i = 0; i < types.length; i++) {
+            map.put(types[i], 0);
+        }
+
+        for(int i = 0; i < list.size(); i++) {
+            data = list.get(i);
+            type = data.getType();
+            map.put(type, map.get(type) + data.getAmount());
+        }
+
+        List<SliceValue> sliceValues = new ArrayList<>();
+
+        for(int i = 0; i < types.length; i++) {
+            float count = map.get(types[i]);
+            if(count != 0) {
+                sliceValues.add(new SliceValue(map.get(types[i])).setLabel(types[i]).setColor(colors[i]));
+            }
+        }
+
+        PieChartData pieChartData = new PieChartData();
+        pieChartData.setValues(sliceValues);
+        pieChartData.setHasLabels(true);
+        pieChartData.setHasCenterCircle(true);
+        pieChartData.setCenterCircleColor(Color.WHITE);
+        pieChartData.setCenterCircleScale(0.5f);
+        pieChartData.setCenterText1("total:");
+        pieChartData.setCenterText1Color(Color.BLACK);
+        pieChartData.setCenterText1FontSize(18);
+        pieChartData.setCenterText2(String.valueOf(amount));
+        pieChartData.setCenterText2Color(Color.BLACK);
+        pieChartData.setCenterText2FontSize(14);
+
+        pieChart.setPieChartData(pieChartData);
+        pieChart.setValueSelectionEnabled(true);
+        pieChart.setCircleFillRatio(1f);
+        pieChart.setOnValueTouchListener(new PieChartOnValueSelectListener() {
             @Override
-            protected void populateViewHolder(IncomeViewHolder viewHolder, final Data model, final int position) {
-
-                viewHolder.setIncomeType(model.getType());
-                viewHolder.setIncomeDate(model.getDate());
-                viewHolder.setIncomeAmount(model.getAmount());
+            public void onValueDeselected() {
 
             }
-        };
 
-        mRecyclerIncome.setAdapter(incomeAdapter);
-
-        FirebaseRecyclerAdapter<Data, ExpenseViewHolder> expenseAdapter = new FirebaseRecyclerAdapter<Data, ExpenseViewHolder>
-                (
-                        Data.class,
-                        R.layout.dashboard_expense,
-                        DashBoardFragment.ExpenseViewHolder.class,
-                        mExpenseDatabase
-
-                ) {
             @Override
-            protected void populateViewHolder(ExpenseViewHolder viewHolder, final Data model, final int position) {
-
-                viewHolder.setExpenseType(model.getType());
-                viewHolder.setExpenseDate(model.getDate());
-                viewHolder.setExpenseAmount(model.getAmount());
-
-            }
-        };
-
-        mRecyclerExpense.setAdapter(expenseAdapter);
+            public void onValueSelected(int arg0, SliceValue value) {
+                Toast.makeText(getActivity(),
+                        "Selected: " + String.format("%.2f%%", value.getValue() / sum * 100), Toast.LENGTH_SHORT).show();
+            }});
     }
 
     //for income data

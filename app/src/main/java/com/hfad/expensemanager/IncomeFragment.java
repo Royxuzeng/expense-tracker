@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -47,7 +48,7 @@ public class IncomeFragment extends Fragment {
     //Update edit text.
 
     private EditText edtAmount;
-    private EditText edtType;
+    private Spinner typeSpinner;
     private EditText edtNote;
 
     //button for update and delete.
@@ -60,8 +61,11 @@ public class IncomeFragment extends Fragment {
     private String type;
     private String note;
     private int amount;
-
     private String post_key;
+
+    //types
+
+    String[] incomeTypes = {"pocket money", "salary", "transfer", "others"};
 
 
     @Override
@@ -198,17 +202,16 @@ public class IncomeFragment extends Fragment {
 
         AlertDialog.Builder mydialog = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        View myview = inflater.inflate(R.layout.update_data_item, null);
+        View myview = inflater.inflate(R.layout.update_income_data, null);
         mydialog.setView(myview);
 
         edtAmount = myview.findViewById(R.id.amount_edt);
-        edtType = myview.findViewById(R.id.type_edt);
+        typeSpinner = myview.findViewById(R.id.type_income_update);
         edtNote = myview.findViewById(R.id.note_edt);
 
         //Set data to edit text..
 
-        edtType.setText(type);
-        edtType.setSelection(type.length());
+        typeSpinner.setSelection(getPosition(type));
 
         edtNote.setText(note);
         edtNote.setSelection(note.length());
@@ -224,7 +227,8 @@ public class IncomeFragment extends Fragment {
         btnUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                type = edtType.getText().toString().trim();
+                type = String.valueOf(typeSpinner.getSelectedItem());
+
                 note = edtNote.getText().toString().trim();
 
                 String mdamount = edtAmount.getText().toString().trim();
@@ -252,5 +256,14 @@ public class IncomeFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    public int getPosition(String s) {
+        for(int i = 0; i < incomeTypes.length; i++) {
+            if(s == incomeTypes[i]) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

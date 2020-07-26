@@ -13,7 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -47,7 +47,7 @@ public class ExpenseFragment extends Fragment {
     //Update edit text.
 
     private EditText edtAmount;
-    private EditText edtType;
+    private Spinner typeSpinner;
     private EditText edtNote;
 
     //button for update and delete.
@@ -60,8 +60,13 @@ public class ExpenseFragment extends Fragment {
     private String type;
     private String note;
     private int amount;
-
+    private int type_id;
     private String post_key;
+
+    //types
+
+    private String[] expenseTypes = {"food and drinks", "stationery", "transportation",
+            "entertainment", "health", "others"};
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -139,7 +144,6 @@ public class ExpenseFragment extends Fragment {
                     public void onClick(View v) {
 
                         post_key = getRef(position).getKey();
-
                         type = model.getType();
                         note = model.getNote();
                         amount = model.getAmount();
@@ -196,17 +200,16 @@ public class ExpenseFragment extends Fragment {
 
         AlertDialog.Builder mydialog = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        View myview = inflater.inflate(R.layout.update_data_item, null);
+        View myview = inflater.inflate(R.layout.update_expense_data, null);
         mydialog.setView(myview);
 
         edtAmount = myview.findViewById(R.id.amount_edt);
-        edtType = myview.findViewById(R.id.type_edt);
+        typeSpinner = myview.findViewById(R.id.type_expense_update);
         edtNote = myview.findViewById(R.id.note_edt);
 
         //Set data to edit text..
 
-        edtType.setText(type);
-        edtType.setSelection(type.length());
+        typeSpinner.setSelection(getPosition(type));
 
         edtNote.setText(note);
         edtNote.setSelection(note.length());
@@ -222,7 +225,8 @@ public class ExpenseFragment extends Fragment {
         btnUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                type = edtType.getText().toString().trim();
+                type = String.valueOf(typeSpinner.getSelectedItem());
+
                 note = edtNote.getText().toString().trim();
 
                 String mdamount = edtAmount.getText().toString().trim();
@@ -250,5 +254,14 @@ public class ExpenseFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    public int getPosition(String s) {
+        for(int i = 0; i < expenseTypes.length; i++) {
+            if(s == expenseTypes[i]) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

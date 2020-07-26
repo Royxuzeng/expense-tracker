@@ -9,7 +9,20 @@
     <string name="log_in_account">Already have an account? Sign in here.</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="enter_the_password_again">Enter the password again:</string>
+    <string-array name="income_type">
+        <item>pocket money</item>
+        <item>salary</item>
+        <item>transfer</item>
+        <item>others</item>
+    </string-array>
+    <string-array name="expense_type">
+        <item>food and drinks</item>
+        <item>stationery</item>
+        <item>transportation</item>
+        <item>entertainment</item>
+        <item>health</item>
+        <item>others</item>
+    </string-array>
 </resources>
